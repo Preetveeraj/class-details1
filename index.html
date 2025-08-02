@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Timetable</title>
+  <style>
+    :root {
+      --main-bg: #f9f9f9;
+      --card-bg: #ffffff;
+      --text-color: #222;
+      --highlight-color: darkblue;
+      --footer-color: #333;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--main-bg);
+      color: var(--text-color);
+      margin: 0;
+      padding: 1rem;
+      box-sizing: border-box;
+      min-height: 100vh;
+      font-size: 18px;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: clamp(1.8rem, 5vw, 2.2rem);
+    }
+
+    .section {
+      margin-top: 1.2rem;
+      padding: 1.2rem;
+      background: var(--card-bg);
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+      margin-bottom: 0.7rem;
+      color: #444;
+    }
+
+    .highlight {
+      font-weight: bold;
+      color: var(--highlight-color);
+    }
+
+    .info-line {
+      margin-bottom: 0.7rem;
+      line-height: 1.6;
+      font-size: clamp(1rem, 3vw, 1.1rem);
+    }
+
+    .footer {
+      font-size: clamp(1rem, 2.5vw, 1.1rem);
+      font-style: italic;
+      color: var(--footer-color);
+      text-align: right;
+      line-height: 1.6;
+      background: var(--main-bg);
+      padding: 1rem 0.5rem;
+      border-radius: 8px;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h2>📅 CLASS TIMETABLE VIEWER</h2>
+
+  <div id="datetime" class="section"></div>
+
+  <div class="section">
+    <strong>College Timing:</strong> 9:30 AM to 4:30 PM
+  </div>
+
+  <div id="cs" class="section">
+    <h3>Ⅲ B.Sc-CS</h3>
+    <div id="cs-period"></div>
+  </div>
+
+  <div id="bca" class="section">
+    <h3>Ⅲ BCA</h3>
+    <div id="bca-period"></div>
+  </div>
+
+  <script>
+    const scanTime = new Date(); // fixed QR open time
+    const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    const formatTime = time => {
+      const [hour, minPart] = time.split(":");
+      let [minute, ampm] = minPart.split(" ");
+      let hour24 = parseInt(hour);
+      if (ampm === "PM" && hour24 !== 12) hour24 += 12;
+      if (ampm === "AM" && hour24 === 12) hour24 = 0;
+      return hour24 * 60 + parseInt(minute);
+    };
+
+    const displayTime = d => {
+      const hours = d.getHours() % 12 || 12;
+      const minutes = d.getMinutes().toString().padStart(2, "0");
+      const ampm = d.getHours() >= 12 ? "PM" : "AM";
+      return `${hours}:${minutes} ${ampm}`;
+    };
+
+    const timeSlots = [
+      ["9:30 AM", "10:30 AM"],
+      ["10:30 AM", "11:25 AM"],
+      ["11:25 AM", "11:35 AM"],  // Break
+      ["11:35 AM", "12:30 PM"],
+      ["12:30 PM", "1:30 PM"],   // Lunch
+      ["1:30 PM", "2:30 PM"],
+      ["2:30 PM", "3:25 PM"],
+      ["3:25 AM", "3:35 PM"],    // Break (note: if actual is 3:25 PM to 3:35 PM, adjust typo)
+      ["3:35 PM", "4:30 PM"]
+    ];
+
+    // Timetables with explicit entries; break and lunch remain as markers
+    const csTimetable = {
+      "Monday": ["DBMS - Lab", "DBMS - Lab", "Break", "DBMS - Lab", "Lunch", "Software Engineering", "DBMS", "Break", "Project-N.S"],
+      "Tuesday": ["Agile project management", "Software Engineering", "Break", "Agile project management", "Lunch", "Software Project Management System", "Software Engineering", "Break", "Value Education"],
+      "Wednesday": ["Software Project Management System", "DBMS", "Break", "Agile project management", "Lunch", "Software Project Management System", "DBMS - Lab", "Break", "DBMS - Lab"],
+      "Thursday": ["DBMS", "Software Engineering", "Break", "Agile project management", "Lunch", "DBMS", "Project-M.S", "Break", "Project-R.N"],
+      "Friday": ["DBMS", "Value Education", "Break", "Project-M.P", "Lunch", "Software Engineering", "Project-R.S", "Break", "Software Project Management System"]
+    };
+
+    const csStaff = {
+      "DBMS - Lab": "M.Preetha",
+      "Software Engineering": "V.Kalaimani",
+      "DBMS": "M.Preetha",
+      "Agile project management": "M.Sakthivel",
+      "Software Project Management System": "R.Suguna",
+      "Value Education": "R.Suguna",
+      "Project-R.S": "R.Suguna",
+      "Project-M.P": "M.Preetha",
+      "Project-N.S": "N.Satheeskumar",
+      "Project-M.S": "M.Sakthivel",
+      "Project-R.N": "R.Nithya"
+    };
+
+    const bcaTimetable = {
+      "Monday": ["Asp.Net Programming Lab", "Asp.Net Programming Lab", "Break", "Asp.Net Programming Lab", "Lunch", "Operating system", "Internet of Things", "Break", "Project-N.S"],
+      "Tuesday": ["Operating system", "Asp.Net", "Break", "Internet of Things", "Lunch", "S/W Project Mgnt system", "Asp.Net", "Break", "Value Education"],
+      "Wednesday": ["S/W Project Mgnt system", "Asp.Net", "Break", "Operating system", "Lunch", "S/W Project Mgnt system", "Asp.Net Programming Lab", "Break", "Asp.Net Programming Lab"],
+      "Thursday": ["Internet of Things", "Asp.Net", "Break", "Internet of Things", "Lunch", "Asp.Net", "Project-R.N", "Break", "Project-M.S"],
+      "Friday": ["Operating system", "Value Education", "Break", "Project-M.P", "Lunch", "Operating system", "Project-R.S", "Break", "S/W Project Mgnt system"]
+    };
+
+    const bcaStaff = {
+      "Asp.Net Programming Lab": "G.Vijaybaskar",
+      "Operating system": "R.Nithya",
+      "S/W Project Mgnt system": "R.Suguna",
+      "Internet of Things": "N.Satheeskumar",
+      "Asp.Net": "G.Vijaybaskar",
+      "Value Education": "R.Suguna",
+      "Project-M.P": "M.Preetha",
+      "Project-N.S": "N.Satheeskumar",
+      "Project-M.S": "M.Sakthivel",
+      "Project-R.N": "R.Nithya",
+      "Project-R.S": "R.Suguna"
+    };
+
+    const getCurrentPeriodIndex = now => {
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      for (let i = 0; i < timeSlots.length; i++) {
+        const start = formatTime(timeSlots[i][0]);
+        const end = formatTime(timeSlots[i][1]);
+        if (currentMins >= start && currentMins < end) return i;
+      }
+      return -1;
+    };
+
+    const display = (id, timetable, staff) => {
+      const now = new Date();
+      const currentDay = weekdays[now.getDay()];
+      const el = document.getElementById(id + "-period");
+      const index = getCurrentPeriodIndex(now);
+
+      if (!timetable[currentDay]) {
+        el.innerHTML = `<div class="info-line">No classes scheduled today.</div>`;
+        return;
+      }
+      if (index === -1) {
+        el.innerHTML = `<div class="info-line">Outside college hours.</div>`;
+        return;
+      }
+
+      const rawSubject = timetable[currentDay][index];
+      const time = `${timeSlots[index][0]} - ${timeSlots[index][1]}`;
+
+      if (rawSubject === "Break" || rawSubject === "Lunch") {
+        const displayLabel = rawSubject === "Break" ? "Break Period" : "Lunch Period";
+        el.innerHTML = `
+          <div class="info-line"><span class="highlight">Period:</span> ${displayLabel}</div>
+          <div class="info-line"><span class="highlight">Period Time:</span> ${time}</div>
+        `;
+      } else {
+        // Count only teaching periods up to current index
+        let count = 0;
+        const todayList = timetable[currentDay];
+        for (let i = 0; i <= index; i++) {
+          const s = todayList[i];
+          if (s !== "Break" && s !== "Lunch") count++;
+        }
+        el.innerHTML = `
+          <div class="info-line"><span class="highlight">Period ${count}:</span> ${rawSubject}</div>
+          <div class="info-line"><span class="highlight">Period Time:</span> ${time}</div>
+          <div class="info-line"><span class="highlight">Staff:</span> ${staff[rawSubject] || "-"}</div>
+        `;
+      }
+    };
+
+    // Initial fixed datetime display (does not update after)
+    const setStaticDateTime = () => {
+      const now = scanTime;
+      document.getElementById("datetime").innerHTML = `
+        <div class="info-line"><span class="highlight">Date:</span> ${now.toLocaleDateString()}</div>
+        <div class="info-line"><span class="highlight">Day:</span> ${weekdays[now.getDay()]}</div>
+        <div class="info-line"><span class="highlight">Time:</span> ${displayTime(now)}</div>
+      `;
+    };
+
+    const updatePeriods = () => {
+      display("cs", csTimetable, csStaff);
+      display("bca", bcaTimetable, bcaStaff);
+    };
+
+    setStaticDateTime();
+    updatePeriods();
+    setInterval(updatePeriods, 60000); // refresh period info every minute
+  </script>
+
+  <div class="footer">
+    <div>Done by,</div>
+    <div>B.Sc-CS 2023–2026 Batch</div>
+    <div>S.Preetveeraj</div>
+  </div>
+</body>
+</html>
