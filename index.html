@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Class Timetable</title>
+
+  <!-- Elegant Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Open+Sans:wght@400;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --text-main: #f0f0f0;
+      --highlight-heading: #58c9b9;
+      --highlight-sub: #58c9b9;
+      --label-color: #f6a623;
+      --subtle: #cccccc;
+      --card-bg: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.2);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-family: 'Open Sans', sans-serif;
+      background: linear-gradient(135deg, #1c2b36, #20343f, #243c49);
+      color: var(--text-main);
+    }
+
+    main {
+      flex-grow: 1;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      margin-bottom: 2rem;
+      color: var(--highlight-heading);
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.4);
+    }
+
+    .section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    h3 {
+      font-family: 'Lora', serif;
+      color: var(--highlight-sub);
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.3rem;
+    }
+
+    .info-line {
+      line-height: 1.6;
+    }
+
+    .highlight {
+      font-family: 'Lora', serif;
+      font-weight: 600;
+      color: var(--label-color);
+    }
+
+    .footer {
+      margin-top: 4rem;
+      text-align: right;
+      font-style: italic;
+      color: var(--subtle);
+      border-top: 1px dashed rgba(255, 255, 255, 0.2);
+      padding-top: 1.5rem;
+      padding-right: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .copyright {
+      width: 100vw;
+      margin: 0;
+      padding: 1rem 0;
+      background: rgba(255, 255, 255, 0.06);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--subtle);
+      font-style: normal;
+    }
+
+    @media (max-width: 600px) {
+      h3 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+    <header>📘 Class Timetable Viewer</header>
+    <div style="text-align: center; font-family: 'Lora', serif; font-size: 1.2rem; color: #f0f0f0; margin-top: -1rem;">
+      Department of Computer Science and Applications
+    </div>
+
+    <div id="datetime" class="section"></div>
+
+    <div class="section">
+      <div class="info-line"><strong><span class="highlight">College Timing</span><span class="highlight">:</span></strong> 9:30 AM to 4:30 PM</div>
+    </div>
+
+    <div id="cs" class="section">
+      <h3>III B.Sc-CS</h3>
+      <div id="cs-period"></div>
+    </div>
+
+    <div id="bca" class="section">
+      <h3>III BCA</h3>
+      <div id="bca-period"></div>
+    </div>
+  </main>
+
+  <div class="footer">
+    <div>Done by,</div>
+    <div>B.Sc-CS 2023–2026 Batch</div>
+    <div>S.Preetveeraj</div>
+  </div>
+
+  <div class="copyright">
+    ©️ 2025 PGP College of Arts and Science. All Rights Reserved.
+  </div>
+
+  <script>
+    const scanTime = new Date(); 
+    const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const formatTime = time => {
+      const [hour, minPart] = time.split(":");
+      let [minute, ampm] = minPart.split(" ");
+      let hour24 = parseInt(hour);
+      if (ampm === "PM" && hour24 !== 12) hour24 += 12;
+      if (ampm === "AM" && hour24 === 12) hour24 = 0;
+      return hour24 * 60 + parseInt(minute);
+    };
+    const displayTime = d => {
+      const hours = d.getHours() % 12 || 12;
+      const minutes = d.getMinutes().toString().padStart(2, "0");
+      const ampm = d.getHours() >= 12 ? "PM" : "AM";
+      return `${hours}:${minutes} ${ampm}`;
+    };
+    const timeSlots = [
+      ["9:30 AM", "10:30 AM"],
+      ["10:30 AM", "11:25 AM"],
+      ["11:25 AM", "11:35 AM"],
+      ["11:35 AM", "12:30 PM"],
+      ["12:30 PM", "1:30 PM"],
+      ["1:30 PM", "2:30 PM"],
+      ["2:30 PM", "3:25 PM"],
+      ["3:25 PM", "3:35 PM"],
+      ["3:35 PM", "4:30 PM"]
+    ];
+
+    const csTimetable = {
+      "Monday": ["DBMS - Lab", "DBMS - Lab", "Break", "DBMS - Lab", "Lunch", "Software Engineering", "DBMS", "Break", "Project-N.S"],
+      "Tuesday": ["Agile project management", "Software Engineering", "Break", "Agile project management", "Lunch", "Software Project Management System", "Software Engineering", "Break", "Value Education"],
+      "Wednesday": ["Software Project Management System", "DBMS", "Break", "Agile project management", "Lunch", "Software Project Management System", "DBMS - Lab", "Break", "DBMS - Lab"],
+      "Thursday": ["DBMS", "Software Engineering", "Break", "Agile project management", "Lunch", "DBMS", "Project-M.S", "Break", "Project-R.N"],
+      "Friday": ["DBMS", "Value Education", "Break", "Project-M.P", "Lunch", "Software Engineering", "Project-R.S", "Break", "Software Project Management System"]
+    };
+    const csStaff = {
+      "DBMS - Lab": "Mrs.M.Preetha",
+      "Software Engineering": "Dr.V.Kalaimani",
+      "DBMS": "Mrs.M.Preetha",
+      "Agile project management": "Mr.M.Sakthivel",
+      "Software Project Management System": "Mrs.R.Suguna",
+      "Value Education": "-",
+      "Project-R.S": "Mrs.R.Suguna",
+      "Project-M.P": "Mrs.M.Preetha",
+      "Project-N.S": "Mr.N.Satheeskumar",
+      "Project-M.S": "Mr.M.Sakthivel",
+      "Project-R.N": "Mrs.R.Nithya"
+    };
+    const bcaTimetable = {
+      "Monday": ["Asp.Net Programming Lab", "Asp.Net Programming Lab", "Break", "Asp.Net Programming Lab", "Lunch", "Operating system", "Internet of Things", "Break", "Project-N.S"],
+      "Tuesday": ["Operating system", "Asp.Net", "Break", "Internet of Things", "Lunch", "S/W Project Mgnt system", "Asp.Net", "Break", "Value Education"],
+      "Wednesday": ["S/W Project Mgnt system", "Asp.Net", "Break", "Operating system", "Lunch", "S/W Project Mgnt system", "Asp.Net Programming Lab", "Break", "Asp.Net Programming Lab"],
+      "Thursday": ["Internet of Things", "Asp.Net", "Break", "Internet of Things", "Lunch", "Asp.Net", "Project-R.N", "Break", "Project-M.S"],
+      "Friday": ["Operating system", "Value Education", "Break", "Project-M.P", "Lunch", "Operating system", "Project-R.S", "Break", "S/W Project Mgnt system"]
+    };
+    const bcaStaff = {
+      "Asp.Net Programming Lab": "Mr.G.Vijaybaskar",
+      "Operating system": "Mrs.R.Nithya",
+      "S/W Project Mgnt system": "Mrs.R.Suguna",
+      "Internet of Things": "Mr.N.Satheeskumar",
+      "Asp.Net": "Mr.G.Vijaybaskar",
+      "Value Education": "-",
+      "Project-M.P": "Mrs.M.Preetha",
+      "Project-N.S": "Mr.N.Satheeskumar",
+      "Project-M.S": "Mr.M.Sakthivel",
+      "Project-R.N": "Mrs.R.Nithya",
+      "Project-R.S": "Mrs.R.Suguna"
+    };
+
+    const getCurrentPeriodIndex = now => {
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      let foundIndex = -1;
+      for (let i = 0; i < timeSlots.length; i++) {
+        const start = formatTime(timeSlots[i][0]);
+        const end = formatTime(timeSlots[i][1]);
+        if (currentMins >= start && currentMins < end) {
+          foundIndex = i;
+          break;
+        }
+      }
+      return foundIndex;
+    };
+
+    const display = (id, timetable, staff) => {
+      const now = new Date();
+      const currentDay = weekdays[now.getDay()];
+      const el = document.getElementById(id + "-period");
+
+      // Saturday & Sunday → no classes
+      if (currentDay === "Saturday" || currentDay === "Sunday") {
+        el.innerHTML = `<div class="info-line">No classes scheduled today.</div>`;
+        return;
+      }
+
+      const index = getCurrentPeriodIndex(now);
+
+      if (!timetable[currentDay]) {
+        el.innerHTML = `<div class="info-line">No classes scheduled today.</div>`;
+        return;
+      }
+
+      if (index === -1) {
+        el.innerHTML = `<div class="info-line">Outside college hours.</div>`;
+        return;
+      }
+
+      const rawSubject = timetable[currentDay][index];
+      const time = `${timeSlots[index][0]} - ${timeSlots[index][1]}`;
+
+      if (rawSubject === "Break" || rawSubject === "Lunch") {
+        const displayLabel = rawSubject === "Break" ? "Break Period" : "Lunch Period";
+        el.innerHTML = `
+          <div class="info-line"><span class="highlight">Period:</span> ${displayLabel}</div>
+          <div class="info-line"><span class="highlight">Period Time:</span> ${time}</div>
+        `;
+      } else {
+        let count = 0;
+        const todayList = timetable[currentDay];
+        for (let i = 0; i <= index; i++) {
+          const s = todayList[i];
+          if (s !== "Break" && s !== "Lunch") count++;
+        }
+        el.innerHTML = `
+          <div class="info-line"><span class="highlight">Period ${count}:</span> ${rawSubject}</div>
+          <div class="info-line"><span class="highlight">Period Time:</span> ${time}</div>
+          <div class="info-line"><span class="highlight">Staff:</span> ${staff[rawSubject] || "-"}</div>
+        `;
+      }
+    };
+
+    const setStaticDateTime = () => {
+      const now = scanTime;
+      document.getElementById("datetime").innerHTML = `
+        <div class="info-line"><span class="highlight">Date:</span> ${now.toLocaleDateString()}</div>
+        <div class="info-line"><span class="highlight">Day:</span> ${weekdays[now.getDay()]}</div>
+        <div class="info-line"><span class="highlight">Time:</span> ${displayTime(now)}</div>
+      `;
+    };
+    const updatePeriods = () => {
+      display("cs", csTimetable, csStaff);
+      display("bca", bcaTimetable, bcaStaff);
+    };
+    setStaticDateTime();
+    updatePeriods();
+    setInterval(updatePeriods, 60000);
+  </script>
+
+</body>
+</html>
